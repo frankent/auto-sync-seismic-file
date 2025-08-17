@@ -1,0 +1,24 @@
+{
+  "DeviceName": "01.SMA-BangNiewDam-01",
+  "SourceFolder": "D:\\Accelerograph\\Raw",
+  "FtpHost": "122.154.8.21",
+  "FtpPort": 38866,
+  "FtpUser": "FTP-SMA-InFraTech01",
+  "FtpPass": "ngJ2ajyx39yZBTg",
+  "TelegramToken": "7797261969:AAFl4RNfAUMsb8ulXSB-MYShjh7lphhxwb4",
+  "TelegramChatId": "-4829663911",
+  "IncludePatterns": [
+    "*.raw",
+    "*.txt",
+    "*.csv",
+    "*.dat"
+  ],
+  "ExcludePatterns": [
+    "*.tmp",
+    "*.part",
+    "*.lock"
+  ],
+  "LogRetentionDays": 30,
+  "MaxRetries": 3,
+  "WinScpPath": "C:\\Program Files (x86)\\WinSCP\\WinSCP.exe"
+}
