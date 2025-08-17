@@ -121,8 +121,8 @@ foreach ($dateFolder in $dateFolders) {
             
             Write-Host "      Found $($newFiles.Count) new files (of $($mrfFiles.Count) total)" -ForegroundColor Green
             
-            # Remote directory: /SMA-File-InFraTech/<DeviceName>/YYYY/MM/DD/<channel>
-            $remoteDir = "/SMA-File-InFraTech/$deviceName/$regularDate/$channelName"
+            # Remote directory: /SMA-File-InFraTech/<DeviceName>/YYYY/MM/DD/<station>/<channel>
+            $remoteDir = "/SMA-File-InFraTech/$deviceName/$regularDate/$stationName/$channelName"
             
             # DryRun mode
             if ($config.DryRun -eq $true) {
