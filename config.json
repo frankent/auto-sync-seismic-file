@@ -1,24 +1,24 @@
 {
   "BaseFolder": "C:\\scream\\data",
   "Stations": [
-    { "StationFolder": "5lc0e0", "DeviceName": "5lc0" },
-    { "StationFolder": "5lc0n0", "DeviceName": "5lc0" },
-    { "StationFolder": "5lc0z0", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0e0", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc0n0", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc0z0", "DeviceName": "HuaiPongOn" },
 
-    { "StationFolder": "5lc0n4", "DeviceName": "5lc0" },
-    { "StationFolder": "5lc0e4", "DeviceName": "5lc0" },
-    { "StationFolder": "5lc0z4", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0n4", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc0e4", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc0z4", "DeviceName": "HuaiPongOn" },
 
-    { "StationFolder": "5lc4e0", "DeviceName": "5lc4" },
-    { "StationFolder": "5lc4n0", "DeviceName": "5lc4" },
-    { "StationFolder": "5lc4z0", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4e0", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc4n0", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc4z0", "DeviceName": "HuaiPongOn" },
 
-    { "StationFolder": "5lc4e4", "DeviceName": "5lc4" },
-    { "StationFolder": "5lc4n4", "DeviceName": "5lc4" },
-    { "StationFolder": "5lc4z4", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4e4", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc4n4", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc4z4", "DeviceName": "HuaiPongOn" },
 
-    { "StationFolder": "5lc000", "DeviceName": "5lc0" },
-    { "StationFolder": "5lc400", "DeviceName": "5lc4" }
+    { "StationFolder": "5lc000", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5lc400", "DeviceName": "HuaiPongOn" }
   ],
   "FtpHost": "122.154.8.21",
   "FtpPort": 38866,

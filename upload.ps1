@@ -1,312 +1,191 @@
-# Multi-Station File Uploader
-# Clean PowerShell script with proper syntax
+# Simple Multi-Station File Uploader
+# Optimized for speed and simplicity
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Get script directory and load config
+# Load config
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Write-Host "Script starting at $(Get-Date)" -ForegroundColor Green
+$configPath = Join-Path $ScriptDir 'config.json'
+$config = Get-Content $configPath -Raw | ConvertFrom-Json
 
-try {
-    $configPath = Join-Path $ScriptDir 'config.json'
-    $config = Get-Content $configPath -Raw | ConvertFrom-Json
-    Write-Host "Configuration loaded" -ForegroundColor Green
-    Write-Host "DryRun mode: $($config.DryRun)" -ForegroundColor Yellow
-} catch {
-    Write-Error "Failed to load config: $($_.Exception.Message)"
-    exit 1
-}
+Write-Host "=== File Uploader Started ===" -ForegroundColor Green
+Write-Host "DryRun: $($config.DryRun)" -ForegroundColor Yellow
 
-# Setup directories
+# Setup paths
 $BinDir = Join-Path $ScriptDir 'bin'
-$TempDir = Join-Path $BinDir 'temp'
 $LogDir = Join-Path $BinDir 'logs'
 $StateDir = Join-Path $BinDir 'state'
-$StateFile = Join-Path $StateDir 'sent-state.json'
-$RetryFile = Join-Path $StateDir 'retry-queue.json'
+$StateFile = Join-Path $StateDir 'uploaded.txt'
 
-New-Item -ItemType Directory -Force -Path $TempDir, $LogDir, $StateDir | Out-Null
+# Create directories
+New-Item -ItemType Directory -Force -Path $LogDir, $StateDir | Out-Null
 
-# Initialize files
-if (-not (Test-Path $StateFile)) {
-    '{}' | Out-File -Encoding UTF8 $StateFile
-}
-if (-not (Test-Path $RetryFile)) {
-    '[]' | Out-File -Encoding UTF8 $RetryFile
-}
-
-# Functions
-function Write-Log {
-    param([string]$Message)
-    $logPath = Join-Path $LogDir ("upload_{0}.log" -f (Get-Date -Format 'yyyyMMdd'))
-    $timestamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-    Add-Content -Encoding UTF8 -Path $logPath -Value "[$timestamp] $Message"
+# Simple logging
+function Write-Log($msg) {
+    $logFile = Join-Path $LogDir "upload_$(Get-Date -Format 'yyyyMMdd').log"
+    $timestamp = Get-Date -Format 'HH:mm:ss'
+    "[$timestamp] $msg" | Add-Content $logFile -Encoding UTF8
+    Write-Host "[$timestamp] $msg" -ForegroundColor Gray
 }
 
-function Send-Telegram {
-    param([string]$Text)
-    try {
-        $uri = "https://api.telegram.org/bot$($config.TelegramToken)/sendMessage"
-        $body = @{ chat_id = $config.TelegramChatId; text = $Text }
-        Invoke-RestMethod -Uri $uri -Method Post -Body $body | Out-Null
-    } catch {
-        Write-Log "Telegram error: $($_.Exception.Message)"
-    }
-}
-
-function Test-FileReady {
-    param([string]$FilePath)
-    try {
-        $fs = [System.IO.File]::Open($FilePath, 'Open', 'Read', 'Read')
-        $fs.Close()
-        return $true
-    } catch {
-        return $false
-    }
-}
-
-function Get-RetryQueue {
-    try {
-        $content = Get-Content $RetryFile -Raw -ErrorAction SilentlyContinue
-        if ($content) {
-            $items = $content | ConvertFrom-Json
-            if ($items -is [array]) {
-                return $items
-            }
+# Load uploaded files list (simple text file)
+$uploadedFiles = @{}
+if (Test-Path $StateFile) {
+    Get-Content $StateFile -ErrorAction SilentlyContinue | ForEach-Object {
+        if ($_ -and $_.Trim()) {
+            $uploadedFiles[$_.Trim()] = $true
         }
-        return @()
-    } catch {
-        return @()
     }
 }
+Write-Log "Loaded $($uploadedFiles.Count) previously uploaded files"
 
-function Set-RetryQueue {
-    param([array]$Items)
-    ($Items | ConvertTo-Json) | Out-File -Encoding UTF8 $RetryFile
-}
+# Process each station
+$totalProcessed = 0
+$totalUploaded = 0
 
-function New-FileKey {
-    param([string]$Path, [long]$Ticks)
-    return "$Path||$Ticks"
-}
-
-# Setup variables
-$yesterday = (Get-Date).AddDays(-1).Date
-$today = (Get-Date).Date
-$includePatterns = @($config.IncludePatterns)
-if (-not $includePatterns) { $includePatterns = @('*.gcf') }
-$excludePatterns = @($config.ExcludePatterns)
-
-# Load state
-$state = @{}
-try {
-    $stateContent = Get-Content $StateFile -Raw | ConvertFrom-Json
-    if ($stateContent) { $state = $stateContent }
-} catch {
-    Write-Log "Starting with empty state"
-}
-
-$retryQueue = Get-RetryQueue
-$failedByStation = @{}
-$totalSent = 0
-$totalSize = 0
-
-Write-Host "Processing $($config.Stations.Count) stations..." -ForegroundColor Cyan
-
-# Main processing loop
 foreach ($station in $config.Stations) {
-    Write-Host "Processing station: $($station.StationFolder)" -ForegroundColor Yellow
+    Write-Host "`n--- Station: $($station.StationFolder) ---" -ForegroundColor Cyan
     
     $stationPath = Join-Path $config.BaseFolder $station.StationFolder
     
     if (-not (Test-Path $stationPath)) {
-        Write-Host "Station folder not found: $stationPath" -ForegroundColor Red
-        Write-Log "Skip $($station.StationFolder) - not found"
+        Write-Log "SKIP: $($station.StationFolder) - folder not found"
         continue
     }
+    
+    # Find .gcf files (simple, fast search)
+    $files = Get-ChildItem -Path $stationPath -Filter "*.gcf" -Recurse -File -ErrorAction SilentlyContinue
+    $totalProcessed += $files.Count
+    
+    # Filter out already uploaded files
+    $newFiles = $files | Where-Object { 
+        -not $uploadedFiles.ContainsKey($_.FullName) -and $_.Length -gt 0 
+    }
+    
+    if ($newFiles.Count -eq 0) {
+        Write-Log "$($station.StationFolder): No new files (found $($files.Count) total)"
+        continue
+    }
+    
+    Write-Host "Found $($newFiles.Count) new files (of $($files.Count) total)" -ForegroundColor Green
     
     $deviceName = if ($station.DeviceName) { $station.DeviceName } else { $station.StationFolder }
     
-    # Find files
-    $allFiles = @()
-    foreach ($pattern in $includePatterns) {
-        $files = Get-ChildItem -Path $stationPath -Recurse -File -Filter $pattern -ErrorAction SilentlyContinue
-        $allFiles += $files
-    }
-    
-    # Filter by date
-    $validFiles = $allFiles | Where-Object {
-        $isValid = $_.LastWriteTime -ge $yesterday -and $_.LastWriteTime -lt $today -and $_.Length -gt 0
-        
-        if ($isValid -and $excludePatterns) {
-            foreach ($exclude in $excludePatterns) {
-                if ($_.Name -like $exclude) {
-                    $isValid = $false
-                    break
-                }
-            }
+    # Group files by their creation date
+    $filesByDate = @{}
+    foreach ($file in $newFiles) {
+        $fileDate = $file.CreationTime.ToString('yyyy/MM/dd')
+        if (-not $filesByDate.ContainsKey($fileDate)) {
+            $filesByDate[$fileDate] = @()
         }
-        return $isValid
+        $filesByDate[$fileDate] += $file
     }
     
-    # Find retry files
-    $retryFiles = @()
-    foreach ($retry in $retryQueue) {
-        $retryPath = [string]$retry.Path
-        if ($retryPath -like "$stationPath*") {
-            if (Test-Path $retryPath) {
-                $fileInfo = Get-Item $retryPath -ErrorAction SilentlyContinue
-                if ($fileInfo -and (Test-FileReady $fileInfo.FullName)) {
-                    $retryFiles += $fileInfo
-                }
-            }
-        }
+    Write-Host "Files grouped into $($filesByDate.Count) date folders:" -ForegroundColor Yellow
+    foreach ($date in $filesByDate.Keys | Sort-Object) {
+        Write-Host "  ${date}: $($filesByDate[$date].Count) files" -ForegroundColor Gray
     }
     
-    # Build todo list
-    $todoFiles = @()
-    
-    foreach ($file in $validFiles) {
-        $key = New-FileKey $file.FullName $file.LastWriteTimeUtc.Ticks
-        if (-not $state.ContainsKey($key) -and (Test-FileReady $file.FullName)) {
-            $todoFiles += $file
-        }
-    }
-    
-    foreach ($file in $retryFiles) {
-        $key = New-FileKey $file.FullName $file.LastWriteTimeUtc.Ticks
-        if (-not $state.ContainsKey($key)) {
-            $alreadyExists = $false
-            foreach ($existing in $todoFiles) {
-                if ($existing.FullName -eq $file.FullName) {
-                    $alreadyExists = $true
-                    break
-                }
-            }
-            if (-not $alreadyExists) {
-                $todoFiles += $file
-            }
-        }
-    }
-    
-    if ($todoFiles.Count -eq 0) {
-        Write-Host "No files to process for $($station.StationFolder)" -ForegroundColor Blue
-        continue
-    }
-    
-    Write-Host "Files to process: $($todoFiles.Count)" -ForegroundColor Green
-    
-    $remoteDir = "/SMA-File-InFraTech/$deviceName/$($yesterday.ToString('yyyy'))/$($yesterday.ToString('MM'))/$($yesterday.ToString('dd'))"
-    
-    # Handle DryRun
+    # DryRun mode - show what would be uploaded
     if ($config.DryRun -eq $true) {
-        Write-Host "DRY RUN MODE" -ForegroundColor Magenta
-        foreach ($file in $todoFiles) {
-            Write-Host "Would upload: $($file.Name)" -ForegroundColor White
-            Write-Log "[DRYRUN] $($file.FullName) -> $remoteDir/$($file.Name)"
+        Write-Host "DRY RUN - Would upload files by date:" -ForegroundColor Magenta
+        foreach ($date in $filesByDate.Keys | Sort-Object) {
+            $remoteDir = "/SMA-File-InFraTech/$deviceName/$date"
+            Write-Host "  To: $remoteDir ($($filesByDate[$date].Count) files)" -ForegroundColor White
+            foreach ($file in $filesByDate[$date] | Select-Object -First 3) {
+                $sizeMB = [Math]::Round($file.Length / 1MB, 3)
+                Write-Host "    - $($file.Name) (${sizeMB}MB)" -ForegroundColor Gray
+            }
+            if ($filesByDate[$date].Count -gt 3) {
+                Write-Host "    ... and $($filesByDate[$date].Count - 3) more" -ForegroundColor Gray
+            }
         }
         continue
     }
     
-    # Create staging
-    $stagingDir = Join-Path $TempDir ([Guid]::NewGuid().ToString('N'))
-    New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
-    
-    $stageMap = @{}
-    foreach ($file in $todoFiles) {
-        $stagePath = Join-Path $stagingDir $file.Name
-        Copy-Item $file.FullName $stagePath -Force
-        $stageMap[$stagePath] = $file.FullName
-    }
-    
-    # Create WinSCP script
-    $scriptLines = @(
-        "open ftp://$($config.FtpUser):$($config.FtpPass)@$($config.FtpHost):$($config.FtpPort)"
-        "option batch on"
-        "option confirm off"
-        "mkdir `"$remoteDir`""
-        "cd `"$remoteDir`""
-        "lcd `"$stagingDir`""
-        "put *"
-        "exit"
-    )
-    
-    $scriptContent = $scriptLines -join "`r`n"
-    $scriptFile = Join-Path $stagingDir 'script.txt'
-    $scriptContent | Out-File -Encoding ASCII $scriptFile
-    
-    # Run WinSCP
-    $logFile = Join-Path $LogDir "winscp_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-    $proc = Start-Process -FilePath $config.WinScpPath -ArgumentList "/script=`"$scriptFile`"", "/log=`"$logFile`"" -Wait -PassThru
-    
-    # Check results
-    $failedFiles = @()
-    try {
-        $logContent = Get-Content $logFile -Raw -ErrorAction SilentlyContinue
-        if ($logContent -and $logContent -match 'Error') {
-            Write-Log "WinSCP reported errors for station $($station.StationFolder)"
-            $failedFiles = $todoFiles  # Assume all failed if errors detected
-        }
-    } catch {
-        Write-Log "Could not parse WinSCP log"
-    }
-    
-    # Update state
-    $newRetry = @()
-    foreach ($retry in $retryQueue) {
-        if (-not ([string]$retry.Path -like "$stationPath*")) {
-            $newRetry += $retry
-        }
-    }
-    
-    $stationSent = 0
-    $stationSize = 0
-    
-    foreach ($file in $todoFiles) {
-        $key = New-FileKey $file.FullName $file.LastWriteTimeUtc.Ticks
+    # Real upload mode - process each date group separately
+    $stationUploaded = 0
+    foreach ($date in $filesByDate.Keys | Sort-Object) {
+        $dateFiles = $filesByDate[$date]
+        $remoteDir = "/SMA-File-InFraTech/$deviceName/$date"
         
-        if ($failedFiles -contains $file) {
-            $newRetry += @{ Path = $file.FullName; Ticks = $file.LastWriteTimeUtc.Ticks }
-            Write-Log "FAIL: $($file.FullName)"
-        } else {
-            $state[$key] = (Get-Date).ToString('s')
-            $stationSent++
-            $stationSize += $file.Length
-            Write-Log "OK: $($file.FullName)"
+        Write-Host "Uploading $($dateFiles.Count) files from ${date} to: $remoteDir" -ForegroundColor Yellow
+        
+        # Create temp directory for this date
+        $tempDir = Join-Path $BinDir "temp_${date}_$([Guid]::NewGuid().ToString('N')[0..7] -join '')".Replace('/', '_')
+        New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+        
+        # Copy files to temp
+        $copiedFiles = @()
+        foreach ($file in $dateFiles) {
+            $tempFile = Join-Path $tempDir $file.Name
+            Copy-Item $file.FullName $tempFile -Force
+            $copiedFiles += $file.FullName
         }
+        
+        # Create WinSCP script for this date
+        $scriptContent = @"
+open ftp://$($config.FtpUser):$($config.FtpPass)@$($config.FtpHost):$($config.FtpPort)
+option batch on
+option confirm off
+mkdir "$remoteDir"
+cd "$remoteDir"
+lcd "$tempDir"
+put *.gcf
+close
+exit
+"@
+        
+        $scriptFile = Join-Path $tempDir "upload.txt"
+        $scriptContent | Out-File -Encoding ASCII $scriptFile
+        
+        # Run WinSCP for this date group
+        Write-Host "  Running WinSCP for ${date}..." -ForegroundColor Gray
+        $proc = Start-Process -FilePath $config.WinScpPath -ArgumentList "/script=`"$scriptFile`"" -Wait -PassThru -WindowStyle Hidden
+        
+        if ($proc.ExitCode -eq 0) {
+            # Success - mark files as uploaded
+            foreach ($filePath in $copiedFiles) {
+                $filePath | Add-Content $StateFile -Encoding UTF8
+                $uploadedFiles[$filePath] = $true
+            }
+            $stationUploaded += $copiedFiles.Count
+            Write-Host "  SUCCESS: Uploaded $($copiedFiles.Count) files for ${date}" -ForegroundColor Green
+            Write-Log "$($station.StationFolder): Uploaded $($copiedFiles.Count) files to $remoteDir"
+        } else {
+            Write-Host "  ERROR: WinSCP failed for ${date} (exit code: $($proc.ExitCode))" -ForegroundColor Red
+            Write-Log "$($station.StationFolder): Upload failed for ${date} - exit code $($proc.ExitCode)"
+        }
+        
+        # Cleanup this temp directory
+        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
     
-    Set-RetryQueue $newRetry
-    $state | ConvertTo-Json | Out-File -Encoding UTF8 $StateFile
-    
-    if ($failedFiles.Count -gt 0) {
-        $failedByStation[$station.StationFolder] = $failedFiles
-    }
-    
-    $totalSent += $stationSent
-    $totalSize += $stationSize
-    
-    Write-Host "Station $($station.StationFolder): $stationSent files sent" -ForegroundColor Green
-    
-    Remove-Item $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
+    $totalUploaded += $stationUploaded
+    Write-Host "Station total: $stationUploaded files uploaded" -ForegroundColor Green
 }
 
 # Final summary
-Write-Host "=== SUMMARY ===" -ForegroundColor Magenta
-
+Write-Host "`n=== SUMMARY ===" -ForegroundColor Magenta
 if ($config.DryRun -eq $true) {
-    $message = "DryRun completed for $($yesterday.ToString('yyyy-MM-dd'))"
-    Write-Host $message -ForegroundColor Green
-} elseif ($failedByStation.Count -gt 0) {
-    $message = "Upload completed with some failures - $($yesterday.ToString('yyyy-MM-dd'))"
-    Send-Telegram $message
-    Write-Host $message -ForegroundColor Yellow
+    Write-Host "DRY RUN completed - checked $totalProcessed files across all stations" -ForegroundColor Green
 } else {
-    $sizeMB = [Math]::Round($totalSize / 1MB, 2)
-    $message = "Upload completed successfully - $($yesterday.ToString('yyyy-MM-dd'))`nFiles: $totalSent`nSize: $sizeMB MB"
-    Send-Telegram $message
-    Write-Host "All uploads successful!" -ForegroundColor Green
+    Write-Host "Uploaded: $totalUploaded files" -ForegroundColor Green
+    Write-Host "Total files processed: $totalProcessed" -ForegroundColor Gray
+    
+    # Send Telegram notification
+    if ($totalUploaded -gt 0) {
+        try {
+            $message = "✅ Upload completed`nFiles uploaded: $totalUploaded`nDate: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+            $uri = "https://api.telegram.org/bot$($config.TelegramToken)/sendMessage"
+            $body = @{ chat_id = $config.TelegramChatId; text = $message }
+            Invoke-RestMethod -Uri $uri -Method Post -Body $body | Out-Null
+            Write-Log "Telegram notification sent"
+        } catch {
+            Write-Log "Telegram notification failed: $($_.Exception.Message)"
+        }
+    }
 }
 
-Write-Host "Script completed at $(Get-Date)" -ForegroundColor Cyan
+Write-Host "Completed at $(Get-Date)" -ForegroundColor Cyan
