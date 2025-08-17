@@ -1,24 +1,34 @@
 {
-  "DeviceName": "01.SMA-BangNiewDam-01",
-  "SourceFolder": "D:\\Accelerograph\\Raw",
+  "BaseFolder": "C:\\scream\\data",
+  "Stations": [
+    { "StationFolder": "5lc0e0", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0n0", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0z0", "DeviceName": "5lc0" },
+
+    { "StationFolder": "5lc0n4", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0e4", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc0z4", "DeviceName": "5lc0" },
+
+    { "StationFolder": "5lc4e0", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4n0", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4z0", "DeviceName": "5lc4" },
+
+    { "StationFolder": "5lc4e4", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4n4", "DeviceName": "5lc4" },
+    { "StationFolder": "5lc4z4", "DeviceName": "5lc4" },
+
+    { "StationFolder": "5lc000", "DeviceName": "5lc0" },
+    { "StationFolder": "5lc400", "DeviceName": "5lc4" }
+  ],
   "FtpHost": "122.154.8.21",
   "FtpPort": 38866,
   "FtpUser": "FTP-SMA-InFraTech01",
   "FtpPass": "ngJ2ajyx39yZBTg",
   "TelegramToken": "7797261969:AAFl4RNfAUMsb8ulXSB-MYShjh7lphhxwb4",
   "TelegramChatId": "-4829663911",
-  "IncludePatterns": [
-    "*.raw",
-    "*.txt",
-    "*.csv",
-    "*.dat"
-  ],
-  "ExcludePatterns": [
-    "*.tmp",
-    "*.part",
-    "*.lock"
-  ],
+  "IncludePatterns": ["*.gcf"],
+  "ExcludePatterns": ["*.tmp", "*.part", "*.lock"],
   "LogRetentionDays": 30,
-  "MaxRetries": 3,
-  "WinScpPath": "C:\\Program Files (x86)\\WinSCP\\WinSCP.exe"
+  "WinScpPath": "C:\\Program Files (x86)\\WinSCP\\WinSCP.com",
+  "DryRun": true
 }
