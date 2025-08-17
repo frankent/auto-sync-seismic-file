@@ -1,0 +1,16 @@
+{
+  "BaseFolder": "D:\\reftek\\arc_mrf",
+  "Stations": [
+    { "StationFolder": "34076", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "34077", "DeviceName": "HuaiPongOn" }
+  ],
+  "FtpHost": "122.154.8.21",
+  "FtpPort": 38866,
+  "FtpUser": "FTP-SMA-InFraTech01",
+  "FtpPass": "ngJ2ajyx39yZBTg",
+  "TelegramToken": "7797261969:AAFl4RNfAUMsb8ulXSB-MYShjh7lphhxwb4",
+  "TelegramChatId": "-4829663911",
+  "LogRetentionDays": 30,
+  "WinScpPath": "C:\\Program Files (x86)\\WinSCP\\WinSCP.com",
+  "DryRun": false
+}
