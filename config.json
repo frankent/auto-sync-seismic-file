@@ -11,7 +11,7 @@
 
     { "StationFolder": "4191e0", "DeviceName": "Maetalop" },
     { "StationFolder": "4191n0", "DeviceName": "Maetalop" },
-    { "StationFolder": "4191z0", "DeviceName": "Maetalop" },
+    { "StationFolder": "4191z0", "DeviceName": "Maetalop" }
   ],
   "FtpHost": "122.154.8.21",
   "FtpPort": 38866,
