@@ -1,24 +1,17 @@
 {
-  "BaseFolder": "C:\\scream\\data",
+  "BaseFolder": "F:\\Scream\\data",
   "Stations": [
-    { "StationFolder": "5lc0e0", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc0n0", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc0z0", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5he3e0", "DeviceName": "Maetalop" },
+    { "StationFolder": "5he3n0", "DeviceName": "Maetalop" },
+    { "StationFolder": "5he3z0", "DeviceName": "Maetalop" },
 
-    { "StationFolder": "5lc0n4", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc0e4", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc0z4", "DeviceName": "HuaiPongOn" },
+    { "StationFolder": "5he4n4", "DeviceName": "Maetalop" },
+    { "StationFolder": "5he4e4", "DeviceName": "Maetalop" },
+    { "StationFolder": "5he4z4", "DeviceName": "Maetalop" },
 
-    { "StationFolder": "5lc4e0", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc4n0", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc4z0", "DeviceName": "HuaiPongOn" },
-
-    { "StationFolder": "5lc4e4", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc4n4", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc4z4", "DeviceName": "HuaiPongOn" },
-
-    { "StationFolder": "5lc000", "DeviceName": "HuaiPongOn" },
-    { "StationFolder": "5lc400", "DeviceName": "HuaiPongOn" }
+    { "StationFolder": "4191e0", "DeviceName": "Maetalop" },
+    { "StationFolder": "4191n0", "DeviceName": "Maetalop" },
+    { "StationFolder": "4191z0", "DeviceName": "Maetalop" },
   ],
   "FtpHost": "122.154.8.21",
   "FtpPort": 38866,
@@ -30,5 +23,5 @@
   "ExcludePatterns": ["*.tmp", "*.part", "*.lock"],
   "LogRetentionDays": 30,
   "WinScpPath": "C:\\Program Files (x86)\\WinSCP\\WinSCP.com",
-  "DryRun": true
+  "DryRun": false
 }
