@@ -97,8 +97,8 @@ foreach ($yearFolder in $yearFolders) {
             $filesByStation = @{}
             foreach ($file in $gcfFiles) {
                 # File pattern: {number}_{station_id}_{YYYYMMDD}_{HH00}{n|e|z}.gcf
-                if ($file.Name -match '^(.+)_([^_]+)_(.{8})_(\d{4}[nez])\.gcf$') {
-                    $stationId = $matches[2]
+                if ($file.Name -match '^([^_]+)_([^_]+)_(\d{8})_(\d{4}[nez])\.gcf$') {
+                    $stationId = $matches[1] + "_" + $matches[2]  # Combine first two parts
                     
                     # Find matching station in config
                     $stationConfig = $config.Stations | Where-Object { $_.StationFolder -eq $stationId }
