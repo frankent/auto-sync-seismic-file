@@ -96,8 +96,8 @@ foreach ($yearFolder in $yearFolders) {
             # Group files by station (extract station_id from filename)
             $filesByStation = @{}
             foreach ($file in $gcfFiles) {
-                # File pattern: {number}_{station_id}_{YYYYMMDD}_{HH00}{n|e|z}.gcf
-                if ($file.Name -match '^([^_]+)_([^_]+)_(\d{8})_(\d{4}[nez])\.gcf$') {
+                # File pattern: {number}_{station_id}_{YYYYMMDD}_{HH00}[{n|e|z}].gcf (channel component optional)
+                if ($file.Name -match '^([^_]+)_([^_]+)_(\d{8})_(\d{4}[nez]?)\.gcf$') {
                     $stationId = $matches[1] + "_" + $matches[2]  # Combine first two parts
                     
                     # Find matching station in config

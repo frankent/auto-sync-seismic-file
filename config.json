@@ -1,25 +1,17 @@
 {
   "BaseFolder": "D:\\scream\\data",
   "Stations": [
-    { "StationFolder": "7f66_acce0", "DeviceName": "Maekuang3" },
-    { "StationFolder": "7f66_accn0", "DeviceName": "Maekuang3" },
-    { "StationFolder": "7f66_accz0", "DeviceName": "Maekuang3" },
+    { "StationFolder": "f25f_1vele0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "f25f_1veln0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "f25f_1velz0", "DeviceName": "Maekuang2" },
 
-    { "StationFolder": "6766_accn0", "DeviceName": "Maekuang3" },
-    { "StationFolder": "6766_acce0", "DeviceName": "Maekuang3" },
-    { "StationFolder": "6766_accz0", "DeviceName": "Maekuang3" },
+    { "StationFolder": "d45e_accn0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "d45e_acce0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "d45e_accz0", "DeviceName": "Maekuang2" },
 
-    { "StationFolder": "cc5e_1vele0", "DeviceName": "Maekuang" },
-    { "StationFolder": "cc5e_1veln0", "DeviceName": "Maekuang" },
-    { "StationFolder": "cc5e_1velz0", "DeviceName": "Maekuang" },
-
-    { "StationFolder": "b65e_acce0", "DeviceName": "Maekuang" },
-    { "StationFolder": "b65e_accn0", "DeviceName": "Maekuang" },
-    { "StationFolder": "b65e_accz0", "DeviceName": "Maekuang" },
-
-    { "StationFolder": "595e_acce0", "DeviceName": "Maekuang" },
-    { "StationFolder": "595e_accn0", "DeviceName": "Maekuang" },
-    { "StationFolder": "595e_accz0", "DeviceName": "Maekuang" }
+    { "StationFolder": "d05e_acce0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "d05e_accn0", "DeviceName": "Maekuang2" },
+    { "StationFolder": "d05e_accz0", "DeviceName": "Maekuang2" }
   ],
   "FtpHost": "122.154.8.21",
   "FtpPort": 38866,
