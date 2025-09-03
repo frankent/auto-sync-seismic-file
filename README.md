@@ -6,6 +6,21 @@ This project provides automated uploaders for seismic data files from multiple s
 2. **Reftek Format** (`upload_reftek.ps1`) - Julian date folder structure  
 3. **Folder-Date Format** (`upload_folder_date.ps1`) - Hierarchical date folder structure
 
+## ⚡ Quick Start Guide
+
+### For First-Time Users:
+
+1. **Download/Clone** this project to your Windows machine
+2. **Install WinSCP** if not already installed
+3. **Edit config files** (`config.json` and `config_reftek.json`) with your settings
+4. **Test first:** Set `"DryRun": true` in configs and run `run_all.bat`
+5. **Go live:** Set `"DryRun": false` and run `setup_scheduler.bat` as Administrator
+
+### For Daily Use:
+- **Manual upload:** Double-click `run_all.bat`
+- **Manage automation:** Run `manage_tasks.bat`
+- **Check logs:** Look in `bin\logs\` folder
+
 ## 📁 Project Structure
 
 ```
@@ -15,6 +30,10 @@ SMAUploader_final/
 ├── upload_folder_date.ps1        # Folder-date hierarchy uploader
 ├── config.json                   # Guralp/Folder-date configuration
 ├── config_reftek.json            # Reftek configuration
+├── run.bat                       # Run single uploader (Reftek by default)
+├── run_all.bat                   # Run all three uploaders sequentially
+├── setup_scheduler.bat           # Setup Windows Task Scheduler (Run as Admin)
+├── manage_tasks.bat              # Manage scheduled tasks interactively
 ├── bin/
 │   ├── logs/                     # Upload logs (auto-created)
 │   └── state/                    # Upload state tracking (auto-created)
@@ -71,7 +90,24 @@ SMAUploader_final/
 
 ### 3. Running Scripts
 
-#### Test Mode (DryRun):
+#### Easy Method (Windows .BAT Files):
+```batch
+# Run single uploader (Reftek by default)
+run.bat
+
+# Run all three uploaders sequentially
+run_all.bat
+
+# Setup automated scheduling (Run as Administrator)
+setup_scheduler.bat
+
+# Manage scheduled tasks interactively
+manage_tasks.bat
+```
+
+#### Manual Method (PowerShell):
+
+##### Test Mode (DryRun):
 ```powershell
 # Set DryRun: true in config, then run:
 powershell -ExecutionPolicy Bypass -File .\upload.ps1
@@ -79,7 +115,7 @@ powershell -ExecutionPolicy Bypass -File .\upload_reftek.ps1
 powershell -ExecutionPolicy Bypass -File .\upload_folder_date.ps1
 ```
 
-#### Production Mode:
+##### Production Mode:
 ```powershell
 # Set DryRun: false in config, then run:
 powershell -ExecutionPolicy Bypass -File .\upload.ps1
@@ -105,9 +141,65 @@ powershell -ExecutionPolicy Bypass -File .\upload.ps1
 - **File pattern:** `{number}_{station_id}_{YYYYMMDD}_{HH00}{n|e|z}.gcf`
 - **Remote path:** `/SMA-File-InFraTech/<DeviceName>/YYYY/MM/DD/<Station>/`
 
+## 🔧 Windows .BAT Utilities
+
+For easier management on Windows systems, the project includes several batch files:
+
+### `run.bat`
+**Purpose:** Run a single uploader with error handling
+- Checks PowerShell availability
+- Runs the Reftek uploader by default
+- Provides success/failure feedback
+- Shows timestamps and exit codes
+
+### `run_all.bat`
+**Purpose:** Run all three uploaders sequentially
+- Executes: Guralp → Reftek → Folder-Date uploaders
+- Tracks success/failure of each script
+- Provides summary report at the end
+- Continues even if one uploader fails
+
+### `setup_scheduler.bat` ⚡ **Requires Administrator**
+**Purpose:** Automatically setup Windows Task Scheduler
+- Creates three scheduled tasks:
+  - **Guralp:** Daily at 2:00 AM, repeats every 4 hours
+  - **Reftek:** Daily at 3:00 AM, repeats every 6 hours
+  - **Folder-Date:** Daily at 1:00 AM (no repetition)
+- Uses dynamic paths (no hardcoding)
+- Provides task creation confirmation
+
+### `manage_tasks.bat`
+**Purpose:** Interactive task management utility
+- **View** existing SMA upload tasks
+- **Delete** all or specific tasks
+- **Enable/Disable** tasks
+- **Run tasks immediately** for testing
+- User-friendly menu interface
+
+#### Usage Examples:
+```batch
+# Quick start - run one uploader
+run.bat
+
+# Run everything at once
+run_all.bat
+
+# Setup automation (as Administrator)
+setup_scheduler.bat
+
+# Manage scheduled tasks
+manage_tasks.bat
+```
+
 ## ⏰ Windows Task Scheduler Setup
 
-### Method 1: Using Task Scheduler GUI
+### Method 1: Using .BAT File (Recommended) ⚡
+
+**Easiest way:** Right-click `setup_scheduler.bat` → "Run as administrator"
+
+This automatically creates all three scheduled tasks with optimal timing.
+
+### Method 2: Using Task Scheduler GUI
 
 1. **Open Task Scheduler:**
    - Press `Win + R`, type `taskschd.msc`, press Enter
@@ -200,6 +292,16 @@ Configure Telegram bot for upload completion notifications:
    - Verify network connectivity
    - Test FTP credentials manually
    - Check firewall settings
+
+5. **Task Scheduler Issues:**
+   - **"Access denied":** Run `setup_scheduler.bat` as Administrator
+   - **Tasks not running:** Check if tasks are enabled in `manage_tasks.bat`
+   - **Wrong paths:** Tasks use dynamic paths, ensure .bat files are in project folder
+
+6. **.BAT File Issues:**
+   - **"PowerShell not found":** Add PowerShell to system PATH
+   - **Scripts fail:** Check if config files exist and are valid JSON
+   - **No output:** .bat files pause at end - press any key to close
 
 ### Script Testing
 
