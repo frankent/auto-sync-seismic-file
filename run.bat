@@ -1,0 +1,1 @@
+powershell -ExecutionPolicy Bypass -File .\upload_reftek.ps1

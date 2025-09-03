@@ -1,0 +1,1 @@
+schtasks /Create /SC DAILY /ST 00:05 /TN "SMA_Upload" /TR "powershell -ExecutionPolicy Bypass -File C:\SyncToCenter\Reftek\upload_reftek.ps1" /RU SYSTEM /RL HIGHEST
